@@ -31,7 +31,6 @@
 #include <fb_priv.h>
 #include <mdp_version.h>
 #include "hwc_utils.h"
-#include "hwc_video.h"
 #include "hwc_fbupdate.h"
 #include "hwc_mdpcomp.h"
 #include "external.h"
@@ -103,8 +102,6 @@ static void reset(hwc_context_t *ctx, int numDisplays,
 
         if(ctx->mFBUpdate[i])
             ctx->mFBUpdate[i]->reset();
-        if(ctx->mVidOv[i])
-            ctx->mVidOv[i]->reset();
         if(ctx->mCopyBit[i])
             ctx->mCopyBit[i]->reset();
         if(ctx->mLayerRotMap[i])
@@ -139,17 +136,17 @@ static int hwc_prepare_primary(hwc_composer_device_1 *dev,
         hwc_layer_1_t *fbLayer = &list->hwLayers[last];
         if(fbLayer->handle) {
             setListStats(ctx, list, dpy);
-            reset_layer_prop(ctx, dpy);
-            int ret = ctx->mMDPComp->prepare(ctx, list);
-            if(!ret) {
-                // IF MDPcomp fails use this route
-                ctx->mVidOv[dpy]->prepare(ctx, list);
-                ctx->mFBUpdate[dpy]->prepare(ctx, list);
-            }
-            ctx->mLayerCache[dpy]->updateLayerCache(list);
+            int fbZOrder = ctx->mMDPComp[dpy]->prepare(ctx, list);
+            if(fbZOrder >= 0)
+                ctx->mFBUpdate[dpy]->prepare(ctx, list, fbZOrder);
+
+            /* Temporarily commenting out C2D until we support partial
+               copybit composition for mixed mode MDP
+
             // Use Copybit, when MDP comp fails
-            if(!ret && ctx->mCopyBit[dpy])
+            if((fbZOrder >= 0) && ctx->mCopyBit[dpy])
                 ctx->mCopyBit[dpy]->prepare(ctx, list, dpy);
+            */
         }
     }
     return 0;
@@ -167,14 +164,18 @@ static int hwc_prepare_external(hwc_composer_device_1 *dev,
         if(!ctx->dpyAttr[dpy].isPause) {
             hwc_layer_1_t *fbLayer = &list->hwLayers[last];
             if(fbLayer->handle) {
-                setListStats(ctx, list, dpy);
-                reset_layer_prop(ctx, dpy);
-                ctx->mVidOv[dpy]->prepare(ctx, list);
-                ctx->mFBUpdate[dpy]->prepare(ctx, list);
-                ctx->mLayerCache[dpy]->updateLayerCache(list);
-                if(ctx->mCopyBit[dpy])
-                    ctx->mCopyBit[dpy]->prepare(ctx, list, dpy);
                 ctx->mExtDispConfiguring = false;
+                setListStats(ctx, list, dpy);
+                int fbZOrder = ctx->mMDPComp[dpy]->prepare(ctx, list);
+                if(fbZOrder >= 0)
+                    ctx->mFBUpdate[dpy]->prepare(ctx, list, fbZOrder);
+
+                /* Temporarily commenting out C2D until we support partial
+                   copybit composition for mixed mode MDP
+
+                if((fbZOrder >= 0) && ctx->mCopyBit[dpy])
+                    ctx->mCopyBit[dpy]->prepare(ctx, list, dpy);
+                */
             }
         } else {
             // External Display is in Pause state.
@@ -288,7 +289,7 @@ static int hwc_blank(struct hwc_composer_device_1* dev, int dpy, int blank)
                 if (!ctx->mExtDisplay->post()) {
                     ret = -1;
                     ALOGE("%s:post failed for external display !! ",
-                                                           __FUNCTION__);
+                          __FUNCTION__);
                 }
             } else {
             }
@@ -355,11 +356,8 @@ static int hwc_set_primary(hwc_context_t *ctx, hwc_display_contents_1_t* list) {
             copybitDone = ctx->mCopyBit[dpy]->draw(ctx, list, dpy, &fd);
         if(list->numHwLayers > 1)
             hwc_sync(ctx, list, dpy, fd);
-        if (!ctx->mVidOv[dpy]->draw(ctx, list)) {
-            ALOGE("%s: VideoOverlay draw failed", __FUNCTION__);
-            ret = -1;
-        }
-        if (!ctx->mMDPComp->draw(ctx, list)) {
+
+        if (!ctx->mMDPComp[dpy]->draw(ctx, list)) {
             ALOGE("%s: MDPComp draw failed", __FUNCTION__);
             ret = -1;
         }
@@ -411,8 +409,8 @@ static int hwc_set_external(hwc_context_t *ctx,
         if(list->numHwLayers > 1)
             hwc_sync(ctx, list, dpy, fd);
 
-        if (!ctx->mVidOv[dpy]->draw(ctx, list)) {
-            ALOGE("%s: VideoOverlay::draw fail!", __FUNCTION__);
+        if (!ctx->mMDPComp[dpy]->draw(ctx, list)) {
+            ALOGE("%s: MDPComp draw failed", __FUNCTION__);
             ret = -1;
         }
 
@@ -573,7 +571,10 @@ void hwc_dump(struct hwc_composer_device_1* dev, char *buff, int buff_len)
     dumpsys_log(aBuf, "Qualcomm HWC state:\n");
     dumpsys_log(aBuf, "  MDPVersion=%d\n", ctx->mMDP.version);
     dumpsys_log(aBuf, "  DisplayPanel=%c\n", ctx->mMDP.panel);
-    ctx->mMDPComp->dump(aBuf);
+    for(int dpy = 0; dpy < MAX_DISPLAYS; dpy++) {
+        if(ctx->mMDPComp[dpy])
+            ctx->mMDPComp[dpy]->dump(aBuf);
+    }
     char ovDump[2048] = {'\0'};
     ctx->mOverlay->getDump(ovDump, 2048);
     dumpsys_log(aBuf, ovDump);
