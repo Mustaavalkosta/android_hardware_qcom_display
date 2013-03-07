@@ -204,6 +204,7 @@ static int hwc_prepare(hwc_composer_device_1 *dev, size_t numDisplays,
 
     ctx->mOverlay->configBegin();
     ctx->mRotMgr->configBegin();
+    ctx->mNeedsRotator = false;
 
     for (int32_t i = numDisplays - 1; i >= 0; i--) {
         hwc_display_contents_1_t *list = displays[i];
