@@ -86,23 +86,17 @@ static int fb_setSwapInterval(struct framebuffer_device_t* dev,
 
 static int fb_post(struct framebuffer_device_t* dev, buffer_handle_t buffer)
 {
-
-    fb_context_t* ctx = (fb_context_t*) dev;
-
-    private_handle_t *hnd = static_cast<private_handle_t*>
-            (const_cast<native_handle_t*>(buffer));
     private_module_t* m =
         reinterpret_cast<private_module_t*>(dev->common.module);
-
-    if (hnd && hnd->flags & private_handle_t::PRIV_FLAGS_FRAMEBUFFER) {
-        m->info.activate = FB_ACTIVATE_VBL | FB_ACTIVATE_FORCE;
-        m->info.yoffset = hnd->offset / m->finfo.line_length;
-        m->commit.var = m->info;
-        if (ioctl(m->framebuffer->fd, MSMFB_DISPLAY_COMMIT, &m->commit) == -1) {
-            ALOGE("%s: MSMFB_DISPLAY_COMMIT ioctl failed, err: %s", __FUNCTION__,
-                    strerror(errno));
-            return -errno;
-        }
+    private_handle_t *hnd = static_cast<private_handle_t*>
+        (const_cast<native_handle_t*>(buffer));
+    const size_t offset = hnd->base - m->framebuffer->base;
+    m->info.activate = FB_ACTIVATE_VBL;
+    m->info.yoffset = offset / m->finfo.line_length;
+    if (ioctl(m->framebuffer->fd, FBIOPUT_VSCREENINFO, &m->info) == -1) {
+        ALOGE("%s: FBIOPUT_VSCREENINFO for primary failed, str: %s",
+                __FUNCTION__, strerror(errno));
+        return -errno;
     }
     return 0;
 }
@@ -346,12 +340,10 @@ int mapFrameBufferLocked(struct private_module_t* module)
     module->framebuffer->base = intptr_t(vaddr);
     memset(vaddr, 0, fbSize);
     module->currentOffset = 0;
-    module->fbPostDone = false;
-    pthread_mutex_init(&(module->fbPostLock), NULL);
-    pthread_cond_init(&(module->fbPostCond), NULL);
-    module->fbPanDone = false;
-    pthread_mutex_init(&(module->fbPanLock), NULL);
-    pthread_cond_init(&(module->fbPanCond), NULL);
+    //Enable vsync
+    int enable = 1;
+    ioctl(module->framebuffer->fd, MSMFB_OVERLAY_VSYNC_CTRL,
+             &enable);
     return 0;
 }
 
