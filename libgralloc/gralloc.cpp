@@ -81,7 +81,7 @@ base: {
     unregisterBuffer: gralloc_unregister_buffer,
     lock: gralloc_lock,
     unlock: gralloc_unlock,
-    perform: gralloc_perform,
+    perform: gralloc_perform
       },
 framebuffer: 0,
 fbFormat: 0,
