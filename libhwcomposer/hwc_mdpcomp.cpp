@@ -346,7 +346,7 @@ bool MDPComp::isDoable(hwc_context_t *ctx,
                 ALOGD_IF(isDebug(), "%s: orientation involved",__FUNCTION__);
                 return false;
             }
-            if(!isWidthValid(ctx,layer)) {
+            if(!isValidDimension(ctx,layer)) {
                 ALOGD_IF(isDebug(), "%s: Buffer is of invalid width",
                                     __FUNCTION__);
                 return false;
