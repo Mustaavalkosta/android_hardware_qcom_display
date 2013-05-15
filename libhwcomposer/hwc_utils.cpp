@@ -64,6 +64,15 @@ static void openFramebufferDevice(hwc_context_t *ctx)
                 1000000000l / ctx->mFbDev->fps;
         ctx->dpyAttr[HWC_DISPLAY_PRIMARY].fd = openFb(HWC_DISPLAY_PRIMARY);
     }
+
+	//Unblank primary on first boot
+    if(ioctl(fb_fd, FBIOBLANK,FB_BLANK_UNBLANK) < 0) {
+        ALOGE("%s: Failed to unblank display", __FUNCTION__);
+        return -errno;
+    }
+    ctx->dpyAttr[HWC_DISPLAY_PRIMARY].isActive = true;
+
+    return 0;
 }
 
 void initContext(hwc_context_t *ctx)
