@@ -220,7 +220,6 @@ static int hwc_prepare(hwc_composer_device_1 *dev, size_t numDisplays,
 
     ctx->mOverlay->configDone();
     ctx->mRotMgr->configDone();
-    MDPComp::resetIdleFallBack();
 
     return ret;
 }
@@ -480,6 +479,7 @@ static int hwc_set(hwc_composer_device_1 *dev,
     // This is only indicative of how many times SurfaceFlinger posts
     // frames to the display.
     CALC_FPS();
+    MDPComp::resetIdleFallBack();
     return ret;
 }
 
