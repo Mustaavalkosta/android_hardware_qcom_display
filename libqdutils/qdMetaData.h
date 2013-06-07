@@ -38,9 +38,28 @@ typedef struct {
     float   contrast;
 } HSICData_t;
 
-typedef struct {
+struct Sharp2Data_t {
+    int32_t strength;
+    uint32_t edge_thr;
+    uint32_t smooth_thr;
+    uint32_t noise_thr;
+};
+
+struct IGCData_t{
+    uint16_t c0[MAX_IGC_LUT_ENTRIES];
+    uint16_t c1[MAX_IGC_LUT_ENTRIES];
+    uint16_t c2[MAX_IGC_LUT_ENTRIES];
+};
+
+struct BufferDim_t {
+    int32_t sliceWidth;
+    int32_t sliceHeight;
+};
+
+struct MetaData_t {
     int32_t operation;
     int32_t interlaced;
+    BufferDim_t bufferDim;
     HSICData_t hsicData;
     int32_t sharpness;
     int32_t video_interface;
@@ -50,7 +69,10 @@ typedef enum {
     PP_PARAM_HSIC       = 0x0001,
     PP_PARAM_SHARPNESS  = 0x0002,
     PP_PARAM_INTERLACED = 0x0004,
-    PP_PARAM_VID_INTFC  = 0x0008
+    PP_PARAM_VID_INTFC  = 0x0008,
+    PP_PARAM_IGC        = 0x0010,
+    PP_PARAM_SHARP2     = 0x0020,
+    UPDATE_BUFFER_GEOMETRY = 0x0080,
 } DispParamType;
 
 int setMetaData(private_handle_t *handle, DispParamType paramType, void *param);
