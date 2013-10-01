@@ -1,14 +1,14 @@
 #Common headers
-common_includes := hardware/qcom/display/libgralloc
-common_includes += hardware/qcom/display/libgenlock
-common_includes += hardware/qcom/display/liboverlay
-common_includes += hardware/qcom/display/libcopybit
-common_includes += hardware/qcom/display/libqdutils
-common_includes += hardware/qcom/display/libhwcomposer
-common_includes += hardware/qcom/display/libexternal
-common_includes += hardware/qcom/display/libqservice
+common_includes := hardware/qcom/display-legacy/libgralloc
+common_includes += hardware/qcom/display-legacy/libgenlock
+common_includes += hardware/qcom/display-legacy/liboverlay
+common_includes += hardware/qcom/display-legacy/libcopybit
+common_includes += hardware/qcom/display-legacy/libqdutils
+common_includes += hardware/qcom/display-legacy/libhwcomposer
+common_includes += hardware/qcom/display-legacy/libexternal
+common_includes += hardware/qcom/display-legacy/libqservice
 
-common_header_export_path := qcom/display
+common_header_export_path := qcom/display-legacy
 
 #Common libraries external to display HAL
 common_libs := liblog libutils libcutils libhardware
@@ -32,7 +32,6 @@ kernel_includes :=
 ifeq ($(TARGET_USES_QCOM_BSP),true)
     common_flags += -DQCOM_BSP
 endif
-ifeq ($(call is-vendor-board-platform,QCOM),true)
-    common_deps += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
-    kernel_includes += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
-endif
+
+common_deps += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr
+kernel_includes += $(TARGET_OUT_INTERMEDIATES)/KERNEL_OBJ/usr/include
