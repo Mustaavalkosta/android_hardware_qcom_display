@@ -37,12 +37,6 @@ class gpu_context_t : public alloc_device_t {
     gpu_context_t(const private_module_t* module,
                   android::sp<IAllocController>alloc_ctrl);
 
-    int gralloc_alloc_framebuffer_locked(size_t size, int usage,
-                                         buffer_handle_t* pHandle);
-
-    int gralloc_alloc_framebuffer(size_t size, int usage,
-                                  buffer_handle_t* pHandle);
-
     int gralloc_alloc_buffer(size_t size, int usage,
                              buffer_handle_t* pHandle,
                              int bufferType, int format,

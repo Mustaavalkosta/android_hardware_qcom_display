@@ -110,17 +110,12 @@ static void reset(hwc_context_t *ctx, int numDisplays,
 }
 
 //clear prev layer prop flags and realloc for current frame
-static void reset_layer_prop(hwc_context_t* ctx, int dpy) {
-    int layer_count = ctx->listStats[dpy].numAppLayers;
-
+static void reset_layer_prop(hwc_context_t* ctx, int dpy, int numAppLayers) {
     if(ctx->layerProp[dpy]) {
        delete[] ctx->layerProp[dpy];
        ctx->layerProp[dpy] = NULL;
     }
-
-    if(layer_count) {
-       ctx->layerProp[dpy] = new LayerProp[layer_count];
-    }
+    ctx->layerProp[dpy] = new LayerProp[numAppLayers];
 }
 
 static int hwc_prepare_primary(hwc_composer_device_1 *dev,

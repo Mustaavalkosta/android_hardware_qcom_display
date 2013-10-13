@@ -54,14 +54,6 @@ using namespace gralloc;
 using namespace qdutils;
 using android::sp;
 
-const int GRALLOC_HEAP_MASK  =  GRALLOC_USAGE_PRIVATE_ADSP_HEAP      |
-                                GRALLOC_USAGE_PRIVATE_UI_CONTIG_HEAP |
-                                GRALLOC_USAGE_PRIVATE_SMI_HEAP       |
-                                GRALLOC_USAGE_PRIVATE_SYSTEM_HEAP    |
-                                GRALLOC_USAGE_PRIVATE_IOMMU_HEAP     |
-                                GRALLOC_USAGE_PRIVATE_MM_HEAP        |
-                                GRALLOC_USAGE_PRIVATE_WRITEBACK_HEAP;
-
 ANDROID_SINGLETON_STATIC_INSTANCE(AdrenoMemInfo);
 
 //Common functions

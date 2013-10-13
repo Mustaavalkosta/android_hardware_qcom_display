@@ -104,6 +104,11 @@ enum {
     GRALLOC_MODULE_PERFORM_GET_STRIDE,
 };
 
+#define GRALLOC_HEAP_MASK   (GRALLOC_USAGE_PRIVATE_UI_CONTIG_HEAP |\
+                             GRALLOC_USAGE_PRIVATE_SYSTEM_HEAP    |\
+                             GRALLOC_USAGE_PRIVATE_IOMMU_HEAP     |\
+                             GRALLOC_USAGE_PRIVATE_MM_HEAP)
+
 #define INTERLACE_MASK 0x80
 #define S3D_FORMAT_MASK 0xFF000
 #define DEVICE_PMEM "/dev/pmem"
