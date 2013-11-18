@@ -705,23 +705,18 @@ static int clear_copybit(struct copybit_device_t *dev,
     struct copybit_context_t* ctx = (struct copybit_context_t*)dev;
     C2D_RECT c2drect = {rect->l, rect->t, rect->r - rect->l, rect->b - rect->t};
     pthread_mutex_lock(&ctx->wait_cleanup_lock);
-    if(!ctx->dst_surface_mapped) {
-        ret = set_image(ctx, ctx->dst[RGB_SURFACE], buf,
-                        (eC2DFlags)flags, mapped_dst_idx);
-        if(ret) {
-            ALOGE("%s: set_image error", __FUNCTION__);
-            unmap_gpuaddr(ctx, mapped_dst_idx);
-            pthread_mutex_unlock(&ctx->wait_cleanup_lock);
-            return COPYBIT_FAILURE;
-        }
-        //clear_copybit is the first call made by HWC for each composition
-        //with the dest surface, hence set dst_surface_mapped.
-        ctx->dst_surface_mapped = true;
-        ctx->dst_surface_base = buf->base;
-#ifdef QCOM_BSP
-        ret = LINK_c2dFillSurface(ctx->dst[RGB_SURFACE], 0x0, &c2drect);
-#endif
+    ret = set_image(ctx, ctx->dst[RGB_SURFACE], buf,
+                       (eC2DFlags)flags, mapped_dst_idx);
+    if(ret) {
+        ALOGE("%s: set_image error", __FUNCTION__);
+        unmap_gpuaddr(ctx, mapped_dst_idx);
+        pthread_mutex_unlock(&ctx->wait_cleanup_lock);
+        return COPYBIT_FAILURE;
     }
+
+#ifdef QCOM_BSP
+    ret = LINK_c2dFillSurface(ctx->dst[RGB_SURFACE], 0x0, &c2drect);
+#endif
     pthread_mutex_unlock(&ctx->wait_cleanup_lock);
     return ret;
 }
@@ -1422,8 +1417,8 @@ static int blit_copybit(
 {
     int status = COPYBIT_SUCCESS;
     struct copybit_context_t* ctx = (struct copybit_context_t*)dev;
-    struct copybit_rect_t dr = { 0, 0, (int)dst->w, (int)dst->h };
-    struct copybit_rect_t sr = { 0, 0, (int)src->w, (int)src->h };
+    struct copybit_rect_t dr = { 0, 0, dst->w, dst->h };
+    struct copybit_rect_t sr = { 0, 0, src->w, src->h };
     pthread_mutex_lock(&ctx->wait_cleanup_lock);
     status = stretch_copybit_internal(dev, dst, src, &dr, &sr, region, false);
     pthread_mutex_unlock(&ctx->wait_cleanup_lock);
